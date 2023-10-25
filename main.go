@@ -13,7 +13,8 @@ func main() {
 	d := dag.NewDAG()
 	action := &SimpleAction{
 		Func: func(ctx context.Context) error {
-			return errors.New("error")
+			// return nil
+			return errors.New("this is test error for action") // DAG will fail
 		},
 	}
 

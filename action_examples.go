@@ -50,7 +50,7 @@ func getUsers() Users {
 			ID:    3,
 			Name:  "Alex Brown",
 			Email: "alex.brown@hotmail.com",
-			// Error: errors.New("error user 3"),
+			// Error: errors.New("this is test error for user Alex Brown"),
 		},
 		{
 			ID:    4,

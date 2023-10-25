@@ -18,7 +18,7 @@ type Dag interface {
 }
 
 type DAG struct {
-	mu       sync.Mutex
+	mu       sync.RWMutex
 	vertices map[string]*dagVertex
 	started  bool
 }
@@ -32,8 +32,7 @@ func (d *DAG) AddVertex(id string, allowFail bool, action Action) error {
 		panic(ErrCanNotModify)
 	}
 
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	// mutex not added beacuse AddVertex will not be called concurrently, but if necesary, write lock should be added
 
 	if _, exists := d.vertices[id]; exists {
 		panic(ErrVertexExists{id}.Error())
@@ -48,6 +47,8 @@ func (d *DAG) AddEdge(fromID, toID string) error {
 	if d.started {
 		panic(ErrCanNotModify)
 	}
+
+	// mutex not added beacuse AddEdge will not be called concurrently, but if necesary, read lock should be added
 
 	fromVertex, ok1 := d.vertices[fromID]
 	if !ok1 {
@@ -82,8 +83,8 @@ func (d *DAG) Next() []Vertex {
 		panic(ErrDagHasFinished)
 	}
 
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	d.started = true
 
@@ -100,8 +101,8 @@ func (d *DAG) Next() []Vertex {
 }
 
 func (d *DAG) HasFailed() bool {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	for _, v := range d.vertices {
 		if v.state == Failed && !v.allowFail {
@@ -112,8 +113,8 @@ func (d *DAG) HasFailed() bool {
 }
 
 func (d *DAG) HasSucceeded() bool {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	for _, v := range d.vertices {
 		if v.state != Passed || (v.state == Failed && v.allowFail) {
@@ -126,8 +127,8 @@ func (d *DAG) HasSucceeded() bool {
 // HasFinished returns true if all vertices have been processed.
 // Needs to be improved, because if DAG grows large, this will be slow. Maybe cache not processed vertices?
 func (d *DAG) HasFinished() bool {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	for _, v := range d.vertices {
 		if v.state == Unprocessed {
