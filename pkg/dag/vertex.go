@@ -23,7 +23,7 @@ const (
 )
 
 // newVertex creates a new Vertex
-func newVertex(id string, allowFail bool, action Action) *dagVertex {
+func newVertex(dag *DAG, id string, allowFail bool, action Action) *dagVertex {
 	return &dagVertex{
 		id:        id,
 		allowFail: allowFail,
@@ -32,6 +32,7 @@ func newVertex(id string, allowFail bool, action Action) *dagVertex {
 }
 
 type dagVertex struct {
+	dag       *DAG
 	id        string
 	state     vertexState
 	allowFail bool
@@ -45,15 +46,22 @@ func (v *dagVertex) Id() string {
 }
 
 func (v *dagVertex) SetPass() {
-	v.state = Passed
+	v.setState(Passed)
 }
 
 func (v *dagVertex) SetFail() {
-	v.state = Failed
+	v.setState(Failed)
 }
 
 func (v *dagVertex) State() vertexState {
 	return v.state
+}
+
+func (v *dagVertex) setState(state vertexState) {
+	if v.dag.HasFinished() {
+		panic(ErrDagHasFinished)
+	}
+	v.state = state
 }
 
 // hasDescendant check if the vertex has the target vertex as a descendant

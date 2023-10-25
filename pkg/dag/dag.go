@@ -43,7 +43,7 @@ func (d *DAG) addVertex(id string, allowFail bool, action Action) error {
 		panic(ErrVertexExists{id}.Error())
 	}
 
-	d.vertices[id] = newVertex(id, allowFail, action)
+	d.vertices[id] = newVertex(d, id, allowFail, action)
 
 	return nil
 }
