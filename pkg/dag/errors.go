@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	ErrCanNotModify   = errors.New("can't modify DAG after calling Next function")
-	ErrDagHasFinished = errors.New("DAG has finished")
-	ErrDagHasFailed   = errors.New("DAG has failed")
+	ErrCanNotModify     = errors.New("can't modify DAG after calling Next function")
+	ErrDagHasFinished   = errors.New("DAG has finished")
+	ErrDagAlreadyFailed = errors.New("can't set vertex state because DAG has already failed")
 )
 
 type ErrVertexExists struct {

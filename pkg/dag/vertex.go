@@ -25,6 +25,7 @@ const (
 // newVertex creates a new Vertex
 func newVertex(dag *DAG, id string, allowFail bool, action Action) *dagVertex {
 	return &dagVertex{
+		dag:       dag,
 		id:        id,
 		allowFail: allowFail,
 		action:    action,
@@ -59,7 +60,7 @@ func (v *dagVertex) State() vertexState {
 
 func (v *dagVertex) setState(state vertexState) {
 	if v.dag.HasFailed() {
-		panic(ErrDagHasFailed)
+		panic(ErrDagAlreadyFailed)
 	}
 	v.state = state
 }

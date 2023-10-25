@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/gacevicljubisa/dag/pkg/dag"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -32,32 +32,36 @@ func main() {
 
 	err = nextRecursive(ctx, d)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error occured: ", err)
 	}
 
 	// d.Next() // panic: DAG has finished
 
+	fmt.Println("Is failed: ", d.HasFailed())
 	fmt.Println("Is succeded: ", d.HasSucceeded())
+	fmt.Println("Is finished: ", d.HasFinished())
 }
 
 // nextRecursive processes the DAG's vertices in parallel, marking each as 'Pass' or 'Fail' based on execution.
 // The function recurses until all vertices are processed.
 func nextRecursive(ctx context.Context, d *dag.DAG) error {
-	var wg sync.WaitGroup
+	g, ctx := errgroup.WithContext(ctx)
 	for _, v := range d.Next() {
-		wg.Add(1)
-		go func(ctx context.Context, currentVertex dag.Vertex) {
-			defer wg.Done()
+		currentVertex := v
+		g.Go(func() error {
 			errExec := currentVertex.Execute(ctx)
 			if errExec != nil {
 				currentVertex.SetFail()
-			} else {
-				currentVertex.SetPass()
+				return errExec
 			}
-		}(ctx, v)
+			currentVertex.SetPass()
+			return nil
+		})
 	}
 
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
 
 	if !d.HasFinished() {
 		return nextRecursive(ctx, d)
