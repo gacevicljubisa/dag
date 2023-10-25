@@ -49,11 +49,7 @@ func (v *dagVertex) SetPass() {
 }
 
 func (v *dagVertex) SetFail() {
-	if v.allowFail {
-		v.state = Passed
-	} else {
-		v.state = Failed
-	}
+	v.state = Failed
 }
 
 func (v *dagVertex) State() vertexState {

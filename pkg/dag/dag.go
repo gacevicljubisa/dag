@@ -105,7 +105,7 @@ func (d *DAG) Next() []Vertex {
 
 func (d *DAG) HasFailed() bool {
 	for _, v := range d.vertices {
-		if v.state == Failed {
+		if v.state == Failed && !v.allowFail {
 			return true
 		}
 	}
@@ -114,7 +114,7 @@ func (d *DAG) HasFailed() bool {
 
 func (d *DAG) HasSucceeded() bool {
 	for _, v := range d.vertices {
-		if v.state != Passed {
+		if v.state != Passed || (v.state == Failed && v.allowFail) {
 			return false
 		}
 	}
