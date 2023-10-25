@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	ErrCanNotModify   = errors.New("can't modify DAG after calling Next")
-	ErrCyclicRelation = errors.New("cyclic relation detected")
+	ErrCanNotModify   = errors.New("can't modify DAG after calling Next function")
+	ErrDagHasFinished = errors.New("DAG has finished")
 )
 
 type ErrVertexExists struct {
@@ -24,4 +24,12 @@ type ErrVertexInvalid struct {
 
 func (e ErrVertexInvalid) Error() string {
 	return fmt.Sprintf("vertex with ID '%s' doesn't exist", e.id)
+}
+
+type ErrCyclicRelation struct {
+	fromID, toID string
+}
+
+func (e ErrCyclicRelation) Error() string {
+	return fmt.Sprintf("cyclic relation detected between vertex '%s' and '%s'", e.fromID, e.toID)
 }

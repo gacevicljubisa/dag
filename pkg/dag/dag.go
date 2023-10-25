@@ -33,38 +33,34 @@ func (d *DAG) AddVertex(id string, allowFail bool, action Action) error {
 
 func (d *DAG) addVertex(id string, allowFail bool, action Action) error {
 	if d.started {
-		return ErrCanNotModify
+		panic(ErrCanNotModify)
 	}
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	if _, exists := d.vertices[id]; exists {
-		return ErrVertexExists{id}
+		panic(ErrVertexExists{id}.Error())
 	}
 
-	d.vertices[id] = &dagVertex{
-		id:        id,
-		allowFail: allowFail,
-		Action:    action,
-	}
+	d.vertices[id] = newVertex(id, allowFail, action)
 
 	return nil
 }
 
 func (d *DAG) AddEdge(fromID, toID string) error {
 	if d.started {
-		return ErrCanNotModify
+		panic(ErrCanNotModify)
 	}
 
 	fromVertex, ok1 := d.vertices[fromID]
 	if !ok1 {
-		return ErrVertexInvalid{id: fromID}
+		panic(ErrVertexInvalid{id: fromID}.Error())
 	}
 
 	toVertex, ok2 := d.vertices[toID]
 	if !ok2 {
-		return ErrVertexInvalid{id: toID}
+		panic(ErrVertexInvalid{id: toID}.Error())
 	}
 
 	// check if the edge already exists
@@ -76,7 +72,7 @@ func (d *DAG) AddEdge(fromID, toID string) error {
 
 	// deep check for cyclic relations
 	if toVertex.hasDescendant(fromVertex) {
-		return ErrCyclicRelation
+		panic(ErrCyclicRelation{fromID, toID}.Error())
 	}
 
 	fromVertex.outEdges = append(fromVertex.outEdges, toVertex)
@@ -87,7 +83,7 @@ func (d *DAG) AddEdge(fromID, toID string) error {
 
 func (d *DAG) Next() []Vertex {
 	if d.HasFinished() {
-		panic("DAG has finished")
+		panic(ErrDagHasFinished)
 	}
 
 	d.mu.Lock()
@@ -98,8 +94,10 @@ func (d *DAG) Next() []Vertex {
 	// TODO: check this if ok
 	var readyVertices []Vertex
 	for _, v := range d.vertices {
-		if v.state == Unprocessed && len(v.inEdges) == 0 {
-			readyVertices = append(readyVertices, v)
+		if v.state == Unprocessed {
+			if len(v.inEdges) == 0 || v.allPredecessorsProcessed() {
+				readyVertices = append(readyVertices, v)
+			}
 		}
 	}
 	return readyVertices
