@@ -58,8 +58,8 @@ func (v *dagVertex) State() vertexState {
 }
 
 func (v *dagVertex) setState(state vertexState) {
-	if v.dag.HasFinished() {
-		panic(ErrDagHasFinished)
+	if v.dag.HasFailed() {
+		panic(ErrDagHasFailed)
 	}
 	v.state = state
 }
@@ -74,10 +74,10 @@ func (v *dagVertex) hasDescendant(target *dagVertex) bool {
 	return false
 }
 
-// allPredecessorsProcessed check if all its predecessors are processed with success
+// allPredecessorsProcessed check if all its predecessors are processed
 func (v *dagVertex) allPredecessorsProcessed() bool {
 	for _, pred := range v.inEdges {
-		if pred.state == Unprocessed { //|| (pred.state == Failed && !pred.allowFail) //check if this is the correct behavior
+		if pred.state == Unprocessed {
 			return false
 		}
 	}

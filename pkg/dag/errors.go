@@ -8,6 +8,7 @@ import (
 var (
 	ErrCanNotModify   = errors.New("can't modify DAG after calling Next function")
 	ErrDagHasFinished = errors.New("DAG has finished")
+	ErrDagHasFailed   = errors.New("DAG has failed")
 )
 
 type ErrVertexExists struct {

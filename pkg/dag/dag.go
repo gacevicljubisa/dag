@@ -28,10 +28,6 @@ func NewDAG() *DAG {
 }
 
 func (d *DAG) AddVertex(id string, allowFail bool, action Action) error {
-	return d.addVertex(id, allowFail, action)
-}
-
-func (d *DAG) addVertex(id string, allowFail bool, action Action) error {
 	if d.started {
 		panic(ErrCanNotModify)
 	}
@@ -91,7 +87,7 @@ func (d *DAG) Next() []Vertex {
 
 	d.started = true
 
-	// TODO: check this if ok
+	// find all ready vertices (vertices with no inEdges or all inEdges are processed)
 	var readyVertices []Vertex
 	for _, v := range d.vertices {
 		if v.state == Unprocessed {
