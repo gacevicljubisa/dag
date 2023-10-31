@@ -18,13 +18,17 @@ type Dag interface {
 }
 
 type DAG struct {
-	mu       sync.RWMutex
-	vertices map[string]*dagVertex
-	started  bool
+	mu              sync.RWMutex
+	vertices        map[string]*dagVertex
+	verticesNotDone map[string]struct{}
+	started         bool
 }
 
 func NewDAG() *DAG {
-	return &DAG{vertices: make(map[string]*dagVertex)}
+	return &DAG{
+		vertices:        make(map[string]*dagVertex),
+		verticesNotDone: make(map[string]struct{}),
+	}
 }
 
 func (d *DAG) AddVertex(id string, allowFail bool, action Action) error {
@@ -38,7 +42,10 @@ func (d *DAG) AddVertex(id string, allowFail bool, action Action) error {
 		panic(ErrVertexExists{id}.Error())
 	}
 
-	d.vertices[id] = newVertex(d, id, allowFail, action)
+	v := newVertex(d, id, allowFail, action)
+
+	d.vertices[id] = v
+	d.verticesNotDone[id] = struct{}{}
 
 	return nil
 }
@@ -125,15 +132,8 @@ func (d *DAG) HasSucceeded() bool {
 }
 
 // HasFinished returns true if all vertices have been processed.
-// Needs to be improved, because if DAG grows large, this will be slow. Maybe cache not processed vertices?
 func (d *DAG) HasFinished() bool {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-
-	for _, v := range d.vertices {
-		if v.state == Unprocessed {
-			return false
-		}
-	}
-	return true
+	return len(d.verticesNotDone) <= 0
 }

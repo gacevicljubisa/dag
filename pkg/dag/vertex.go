@@ -62,6 +62,7 @@ func (v *dagVertex) setState(state vertexState) {
 	if v.dag.HasFailed() {
 		panic(ErrDagAlreadyFailed)
 	}
+	delete(v.dag.verticesNotDone, v.id)
 	v.state = state
 }
 
@@ -87,6 +88,6 @@ func (v *dagVertex) allPredecessorsProcessed() bool {
 
 // Execute executes the action of the vertex
 func (v *dagVertex) Execute(ctx context.Context) error {
-	fmt.Printf("current vertex: %s\n", v.Id())
+	fmt.Printf("executing vertex: %s\n", v.Id())
 	return v.action.Run(ctx)
 }
